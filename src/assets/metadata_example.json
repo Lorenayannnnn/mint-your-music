@@ -1,0 +1,16 @@
+{
+  "name": "Movement III - Flute 1 Click + MIDI - Percussion Concerto on Songs from Turkmenistan.mp3",
+  "description": "Test for Blockchain hack",
+  "file_url": "ipfs address of the cover image",
+  "animation_url": "ipfs address of the mp3 file",
+  "attributes": [
+    {
+      "trait_type": "genre",
+      "value": "classical"
+    },
+    {
+      "trait_type": "instrument",
+      "value": "flute"
+    }
+  ]
+}
