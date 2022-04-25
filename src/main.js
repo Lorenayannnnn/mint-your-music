@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import ElementUI from 'element-ui';
+import './assets/element-#6C63FF/index.css'
 import Axios from "./config/axios";
 import locale from 'element-ui/lib/locale/lang/en'
 import Vuesax from 'vuesax'
