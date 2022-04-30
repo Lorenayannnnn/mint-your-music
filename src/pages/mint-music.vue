@@ -103,7 +103,7 @@
           <div slot="tip" class="el-upload__tip">Only .mp3 file is allowed</div>
         </el-upload>
         <!--        Upload cover image-->
-        <subtitle style="margin-top: 1rem;">Upload your cover image (Optional)</subtitle>
+        <subtitle style="margin-top: 1rem;">Upload your cover image</subtitle>
         <el-upload
           class="avatar-uploader"
           :action="uploadFileAPI"
