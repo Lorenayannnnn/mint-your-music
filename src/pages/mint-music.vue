@@ -27,7 +27,7 @@
               color="#6C63FF"
               label="Description"
               v-model="songInfo.songDescription"
-              placeholder="Relevant description of the song (e.g.:)"
+              placeholder="Relevant description of the song"
             />
             <vs-input
               color="#6C63FF"
@@ -47,7 +47,7 @@
             Back
           </vs-button>
           <vs-button color="#6C63FF" class="nextBtn" @click="next">
-            Upload Your Song
+            Fill out Collection Info
             <i class="el-icon-caret-right"/>
           </vs-button>
         </div>
