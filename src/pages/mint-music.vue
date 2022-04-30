@@ -434,7 +434,7 @@ export default {
   height: 15rem;
 }
 /deep/ .el-upload-list__item {
-  width: 15rem;
+  width: auto;
   height: 15rem;
 }
 /deep/ .upload-demo {
@@ -452,7 +452,7 @@ export default {
   font-size: 1rem;
 }
 /deep/ .el-upload-list__item .is-ready {
-  width: 15rem;
+  width: auto;
   height: 15rem;
 }
 </style>
