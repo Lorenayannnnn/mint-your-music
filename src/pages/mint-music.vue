@@ -226,14 +226,14 @@ export default {
         })
         // 1. Use existing contract / deploy new contract
         if (!this.collectionInfo.useExistingContract) {
-          this.$axios.post("https://api.nftport.xyz/v0/contracts", {
+          this.$axios.post("/v0/contracts", {
             "chain": "rinkeby",
             "name": this.collectionInfo.contractName,
             "symbol": "C",
             "owner_address": this.owner_address
           }).then(res => {
             // Get contract address using transaction hash
-            return this.$axios.get(`https://api.nftport.xyz/v0/contracts/${res.transaction_hash}`);
+            return this.$axios.get(`/v0/contracts/${res.transaction_hash}`);
           }).then(res => {
             // Get contract address
             this.collectionInfo.contractAddress = res.contract_address;
@@ -286,9 +286,8 @@ export default {
           "value": this.songInfo.instrument
         });
       }
-      this.songInfo.songDescription = `Created by ${this.songInfo.artistName}.
-      ${this.songInfo.songDescription}`;
-      this.$axios.post("https://api.nftport.xyz/v0/metadata", {
+      this.songInfo.songDescription = `Created by ${this.songInfo.artistName}. ${this.songInfo.songDescription}`;
+      this.$axios.post("/v0/metadata", {
           "name": this.file.songName,
           "description": this.songInfo.songDescription,
           "file_url": this.file.coverImageIpfs,
@@ -312,21 +311,21 @@ export default {
         "metadata_uri": this.metadata_uri,
         "mint_to_address": this.owner_address
       });
-      // this.$axios.post("https://api.nftport.xyz/v0/mints/customizable", {
-      //     "chain": "rinkeby",
-      //     "contract_address": this.collectionInfo.contractAddress,
-      //     "metadata_uri": this.metadata_uri,
-      //     "mint_to_address": this.owner_address
-      //   }
-      // ).then(res => {
-      //   this.$message.success("Your song has successfully been minted.");
-      //   // TODO
-      //   console.log(res);
-      // }).catch(err => {
-      //   this.$message.error("Error when minting. Please try again later.");
-      //   this.loading.close();
-      //   console.log(err);
-      // })
+      this.$axios.post("/v0/mints/customizable", {
+          "chain": "rinkeby",
+          "contract_address": this.collectionInfo.contractAddress,
+          "metadata_uri": this.metadata_uri,
+          "mint_to_address": this.owner_address
+        }
+      ).then(res => {
+        this.$message.success("Your song has successfully been minted.");
+        // TODO
+        console.log(res);
+      }).catch(err => {
+        this.$message.error("Error when minting. Please try again later.");
+        this.loading.close();
+        console.log(err);
+      })
     },
     beforeAvatarUpload(file) {
       const isJPG = file.type === 'image/jpeg';
