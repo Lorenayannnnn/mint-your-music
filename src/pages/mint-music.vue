@@ -156,7 +156,6 @@ export default {
       },
       file: {
         song: [],
-        songName: '',
         coverImageIpfs: '',
         songIpfs: '',
         dialogImageUrl: '',
@@ -251,9 +250,6 @@ export default {
       // Get ipfs link and name of the song
       console.log(res);
       this.file.songIpfs = res.ipfs_url;
-      this.file.songName = res.file_name;
-      let name = "Lorena";
-      name.substr(0, name.length - 4);
       this.$refs.uploadCoverImage.submit();
     },
     handleUploadError() {
@@ -268,11 +264,6 @@ export default {
       this.uploadMetaData();
     },
     uploadMetaData() {
-      let metadata = {};
-      metadata.name = this.file.songName
-      metadata.description = this.songInfo.songDescription;
-      metadata.file_url = this.file.coverImageIpfs;
-      metadata.animation_url = this.file.songIpfs;
       let attributes = [];
       if (this.songInfo.genre.trim() !== "") {
         attributes.push({
@@ -286,10 +277,9 @@ export default {
           "value": this.songInfo.instrument
         });
       }
-      this.songInfo.songDescription = `Created by ${this.songInfo.artistName}. ${this.songInfo.songDescription}`;
       this.$axios.post("/v0/metadata", {
-          "name": this.file.songName,
-          "description": this.songInfo.songDescription,
+          "name": this.songInfo.songTitle,
+          "description": `Created by ${this.songInfo.artistName}. ${this.songInfo.songDescription}`,
           "file_url": this.file.coverImageIpfs,
           "animation_url": this.file.songIpfs,
           "attributes": attributes
@@ -308,19 +298,21 @@ export default {
       console.log({
         "chain": "rinkeby",
         "contract_address": this.collectionInfo.contractAddress,
-        "metadata_uri": this.metadata_uri,
+        "metadata_uri": this.metadata_Ipfs,
         "mint_to_address": this.owner_address
       });
       this.$axios.post("/v0/mints/customizable", {
           "chain": "rinkeby",
           "contract_address": this.collectionInfo.contractAddress,
-          "metadata_uri": this.metadata_uri,
+          "metadata_uri": this.metadata_Ipfs,
           "mint_to_address": this.owner_address
-        }
-      ).then(res => {
+        }).then(res => {
         this.$message.success("Your song has successfully been minted.");
-        // TODO
+        this.loading.close();
         console.log(res);
+        setTimeout(() => {
+          this.$router.push("/minted");
+        }, 2500);
       }).catch(err => {
         this.$message.error("Error when minting. Please try again later.");
         this.loading.close();
