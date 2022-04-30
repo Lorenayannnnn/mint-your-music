@@ -56,8 +56,8 @@
 <!----------------------------------      Blockchain Collection Info---------------------------------->
       <div id="collectionInfo" style="padding: 3rem;" v-show="active === 1">
         <div style="margin-bottom: 5rem;">
-          <el-radio v-model="collectionInfo.useExistingContract" :label="true">Upload to an existing collection</el-radio>
           <el-radio v-model="collectionInfo.useExistingContract" :label="false">Create new collection</el-radio>
+          <el-radio v-model="collectionInfo.useExistingContract" :label="true">Upload to an existing collection</el-radio>
         </div>
         <vs-input
           color="#6C63FF"
@@ -162,7 +162,7 @@ export default {
         dialogVisible: false,
       },
       collectionInfo: {
-        useExistingContract: true,
+        useExistingContract: false,
         contractAddress: "",
         contractName: ""
       },
