@@ -177,7 +177,7 @@ export default {
   },
   mounted() {
     if (!ethereum.isConnected()) {
-      this.$router.push("/pc/home")
+      this.$router.push("/home")
     } else {
       ethereum.request({ method: 'eth_requestAccounts' }).then(res => {
         this.owner_address = res[0];
@@ -344,7 +344,7 @@ export default {
 <style scoped>
 #mint_music {
   margin: 1rem 7rem;
-  min-width: 42rem;
+  min-width: 43rem;
 }
 #body {
   background: #f4f7fa;
