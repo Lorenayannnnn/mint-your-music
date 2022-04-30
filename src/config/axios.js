@@ -17,6 +17,8 @@ Axios.interceptors.request.use((config) => {
       background: 'white'
     })
   }
+  config.headers['Authorization'] = '21049794-0166-44a9-9c7f-8a8175c3dca0'
+  return config;
 }), (error) => {
   Message.error(error)
   console.log(error);

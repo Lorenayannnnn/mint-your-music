@@ -5,6 +5,7 @@ Vue.use(Router)
 
 const Home = () => import('../pages/home');
 const Main = () => import('../pages/mint-music');
+const AfterMint = () => import('../pages/after-mint');
 
 const originalPush = Router.prototype.push;
 Router.prototype.push = function replace(location) {
@@ -25,6 +26,10 @@ export default new Router({
       path: '/main',
       name: 'Main',
       component: Main
+    }, {
+      path: '/minted',
+      name: 'AfterMint',
+      component: AfterMint
     }
   ]
 })

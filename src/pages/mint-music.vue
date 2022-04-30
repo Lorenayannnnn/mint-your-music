@@ -88,10 +88,13 @@
         <subtitle>Upload your mp3 file</subtitle>
         <el-upload
           class="upload-demo"
-          action="https://api.nftport.xyz/v0/files"
+          :action="uploadFileAPI"
           ref="mp3Upload"
           multiple
+          :headers="uploadFileHeader"
           :file-list="file.song"
+          :on-success="handleMp3Success"
+          :on-error="handleUploadError"
           accept=".mp3"
           :limit="1"
           :on-exceed="mp3Exceed"
@@ -103,15 +106,17 @@
         <subtitle style="margin-top: 1rem;">Upload your cover image (Optional)</subtitle>
         <el-upload
           class="avatar-uploader"
-          action="https://api.nftport.xyz/v0/files"
+          :action="uploadFileAPI"
           list-type="picture-card"
           ref="uploadCoverImage"
           accept=".jpeg"
-          :on-success="handleAvatarSuccess"
+          :headers="uploadFileHeader"
+          :on-success="handleImageSuccess"
+          :on-error="handleUploadError"
           :before-upload="beforeAvatarUpload"
           :on-preview="handlePictureCardPreview"
           :auto-upload="false">
-          <img v-if="file.coverImageURL" :src="file.coverImageURL" class="avatar" alt="">
+          <img v-if="file.coverImageIpfs" :src="file.coverImageIpfs" class="avatar" alt="">
           <i v-else class="el-icon-plus avatar-uploader-icon"/>
           <div slot="tip" class="el-upload__tip">Only jpeg is allowed</div>
         </el-upload>
@@ -134,6 +139,7 @@
 
 <script>
 import Subtitle from "../components/subtitle";
+import {Loading} from "element-ui";
 export default {
   name: "mintMusic",
   components: {Subtitle},
@@ -150,7 +156,9 @@ export default {
       },
       file: {
         song: [],
-        coverImageURL: "",
+        songName: '',
+        coverImageIpfs: '',
+        songIpfs: '',
         dialogImageUrl: '',
         dialogVisible: false,
       },
@@ -158,7 +166,23 @@ export default {
         useExistingContract: true,
         contractAddress: "",
         contractName: ""
-      }
+      },
+      uploadFileAPI: "https://api.nftport.xyz/v0/files",
+      uploadFileHeader: {
+        'Authorization': "21049794-0166-44a9-9c7f-8a8175c3dca0"
+      },
+      metadata_Ipfs: "",
+      owner_address: "",
+      loading: ""
+    }
+  },
+  mounted() {
+    if (!ethereum.isConnected()) {
+      this.$router.push("/pc/home")
+    } else {
+      ethereum.request({ method: 'eth_requestAccounts' }).then(res => {
+        this.owner_address = res[0];
+      })
     }
   },
   methods: {
@@ -191,17 +215,122 @@ export default {
     mint() {
       if (this.$refs.mp3Upload.uploadFiles.length === 0) {
         this.$message.error("Please upload your music mp3 file to continue.");
+      } else if (this.$refs.uploadCoverImage.uploadFiles.length === 0) {
+        this.$message.error("Please upload your a cover image for your song.");
       } else {
-        // TODO mint music
+        this.loading = Loading.service({
+          lock: true,
+          text: "Loading...",
+          spinner: 'el-icon-loading',
+          background: 'white'
+        })
+        // 1. Use existing contract / deploy new contract
+        if (!this.collectionInfo.useExistingContract) {
+          this.$axios.post("https://api.nftport.xyz/v0/contracts", {
+            "chain": "rinkeby",
+            "name": this.collectionInfo.contractName,
+            "symbol": "C",
+            "owner_address": this.owner_address
+          }).then(res => {
+            // Get contract address using transaction hash
+            return this.$axios.get(`https://api.nftport.xyz/v0/contracts/${res.transaction_hash}`);
+          }).then(res => {
+            // Get contract address
+            this.collectionInfo.contractAddress = res.contract_address;
+            this.$refs.mp3Upload.submit();
+          }).catch(err => {
+            this.loading.close();
+            this.$message.error("Error when creating collection. Please try again later.");
+          })
+        } else {
+          this.$refs.mp3Upload.submit();
+        }
       }
     },
-    handleAvatarSuccess(res, file) {
-      this.imageUrl = URL.createObjectURL(file.raw);
+    handleMp3Success(res, file) {
+      // Get ipfs link and name of the song
+      console.log(res);
+      this.file.songIpfs = res.ipfs_url;
+      this.file.songName = res.file_name;
+      let name = "Lorena";
+      name.substr(0, name.length - 4);
+      this.$refs.uploadCoverImage.submit();
+    },
+    handleUploadError() {
+      this.$message.error("Error when uploading files. Please try again later.");
+      this.loading.close();
+    },
+    handleImageSuccess(res, file) {
+      // Get ipfs link of the image
+      this.file.coverImageIpfs = res.ipfs_url;
+      console.log(res);
+      // this.imageUrl = URL.createObjectURL(file.raw);
+      this.uploadMetaData();
+    },
+    uploadMetaData() {
+      let metadata = {};
+      metadata.name = this.file.songName
+      metadata.description = this.songInfo.songDescription;
+      metadata.file_url = this.file.coverImageIpfs;
+      metadata.animation_url = this.file.songIpfs;
+      let attributes = [];
+      if (this.songInfo.genre.trim() !== "") {
+        attributes.push({
+          "trait_type": "genre",
+          "value": this.songInfo.genre
+        });
+      }
+      if (this.songInfo.instrument.trim() !== "") {
+        attributes.push({
+          "trait_type": "instrument",
+          "value": this.songInfo.instrument
+        });
+      }
+      this.songInfo.songDescription = `Created by ${this.songInfo.artistName}.
+      ${this.songInfo.songDescription}`;
+      this.$axios.post("https://api.nftport.xyz/v0/metadata", {
+          "name": this.file.songName,
+          "description": this.songInfo.songDescription,
+          "file_url": this.file.coverImageIpfs,
+          "animation_url": this.file.songIpfs,
+          "attributes": attributes
+        }
+      ).then(res => {
+        this.metadata_Ipfs = res.metadata_uri;
+        // Mint
+        this.mintToChain();
+      }).catch(err => {
+        this.$message.error("Error when uploading metadata.");
+        this.loading.close();
+        console.log(err);
+      })
+    },
+    mintToChain() {
+      console.log({
+        "chain": "rinkeby",
+        "contract_address": this.collectionInfo.contractAddress,
+        "metadata_uri": this.metadata_uri,
+        "mint_to_address": this.owner_address
+      });
+      // this.$axios.post("https://api.nftport.xyz/v0/mints/customizable", {
+      //     "chain": "rinkeby",
+      //     "contract_address": this.collectionInfo.contractAddress,
+      //     "metadata_uri": this.metadata_uri,
+      //     "mint_to_address": this.owner_address
+      //   }
+      // ).then(res => {
+      //   this.$message.success("Your song has successfully been minted.");
+      //   // TODO
+      //   console.log(res);
+      // }).catch(err => {
+      //   this.$message.error("Error when minting. Please try again later.");
+      //   this.loading.close();
+      //   console.log(err);
+      // })
     },
     beforeAvatarUpload(file) {
       const isJPG = file.type === 'image/jpeg';
       const isLt2M = file.size / 1024 / 1024 < 2;
-
       if (!isJPG) {
         this.$message.error('Please upload jpeg file');
       }
@@ -224,6 +353,7 @@ export default {
 <style scoped>
 #mint_music {
   margin: 1rem 7rem;
+  min-width: 42rem;
 }
 #body {
   background: #f4f7fa;
